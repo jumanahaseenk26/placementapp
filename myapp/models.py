@@ -13,6 +13,7 @@ class Jobs(models.Model):
     description=models.CharField(max_length=200)
     salary=models.PositiveIntegerField()
     experience=models.PositiveIntegerField(default=0)
+    created_date=models.DateTimeField(auto_now_add=True,null=True)
     last_date=models.DateField()
     vaccancies=models.PositiveIntegerField(default=1)
     poster=models.ImageField(upload_to="posterimages",null=True,blank=True)
@@ -20,9 +21,18 @@ class Jobs(models.Model):
     qualification=models.CharField(max_length=200)
     category=models.ForeignKey(Category,on_delete=models.DO_NOTHING)
     status=models.BooleanField(default=True)
+    company=models.CharField(max_length=200,null=True)
+    options=(
+        ("Part-time","Part-time"),("Full-time","Full-time")
+    )
+    job_type=models.CharField(max_length=200,choices=options,default="Full-time")
 
     def __str__(self) -> str:
         return self.title
+    
+    def application_count(self):
+        qs=Applications.objects.filter(job=self).count()
+        return qs
     
 class StudentProfile(models.Model):
     qualification=models.CharField(max_length=200)
@@ -37,7 +47,11 @@ class StudentProfile(models.Model):
     address=models.CharField(max_length=200)
     phone=models.CharField(max_length=200)
     profile_pic=models.ImageField(upload_to="profilepics",null=True,blank=True)
-    user=models.OneToOneField(User,on_delete=models.CASCADE)
+    user=models.OneToOneField(User,on_delete=models.CASCADE,related_name="profile")
+    saved_jobs=models.ManyToManyField(Jobs,null=True,related_name="saved")
+
+    def __str__(self):
+        return self.user.username
 
 class Applications(models.Model):
     job=models.ForeignKey(Jobs,on_delete=models.DO_NOTHING)
